@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ipfs # 全局唯一名称
+spec:
+  selector:
+    matchLabels:
+      app: ipfs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ipfs
+    spec:
+      containers: # 容器定义
+        - name: ipfs
+          image: ipfs/go-ipfs:latest # 容器镜像路径
+          ports: # 容器监听端口
+            - containerPort: 8080 # WEB
+              name: Gateway
+              protocol: TCP
+            - containerPort: 5001 #
+              name: Api
+              protocol: TCP
+            - containerPort: 4001
+              name: Swarm
+              protocol: TCP
+          volumeMounts:
+            - name: ipfs-data # 从 IPFS 存储文件目录
+              mountPath: /data/ipfs
+            - name: ipfs-export # 从 IPFS 导出的文件目录
+                mountPath: /export
+  volumeClaimTemplates:
+    - metadata:
+        name: ipfs-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "pd-ssd"
+        resources:
+          requests:
+            storage: 20Gi
+    - metadata:
+        name: ipfs-export
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "pd-ssd"
+          resources:
+            requests:
+              storage: 10Gi
